@@ -13,6 +13,12 @@ public enum SwitcherType {
     case segement
 }
 
+public protocol SegementSlideSwitcherViewButtonSource: class {
+    func segementSwitcherViewButton() -> UIButton?
+    func segementSwitcherViewButtonHeight() -> CGFloat?
+    func segementSwitcherViewMakeButtonsCenterY() -> Bool?
+}
+
 public protocol SegementSlideSwitcherViewDelegate: class {
     var titlesInSegementSlideSwitcherView: [String] { get }
     
@@ -33,7 +39,7 @@ public class SegementSlideSwitcherView: UIView {
     
     public private(set) var selectedIndex: Int?
     public weak var delegate: SegementSlideSwitcherViewDelegate?
-    
+    public weak var buttonSource: SegementSlideSwitcherViewButtonSource?
     /// you must call `reloadData()` to make it work, after the assignment.
     public var config: SegementSlideSwitcherConfig = SegementSlideSwitcherConfig.shared
     
@@ -89,7 +95,7 @@ public class SegementSlideSwitcherView: UIView {
         guard let titles = delegate?.titlesInSegementSlideSwitcherView else { return }
         guard !titles.isEmpty else { return }
         for (index, title) in titles.enumerated() {
-            let button = UIButton(type: .custom)
+            let button = buttonSource?.segementSwitcherViewButton() ?? UIButton(type: .custom)
             button.clipsToBounds = false
             button.titleLabel?.font = innerConfig.normalTitleFont
             button.backgroundColor = .clear
@@ -180,11 +186,16 @@ extension SegementSlideSwitcherView {
                 buttonWidth = (bounds.width-innerConfig.horizontalMargin*2)/CGFloat(titleButtons.count)
             case .segement:
                 let title = titleButton.title(for: .normal) ?? ""
-                let normalButtonWidth = title.boundingWidth(with: innerConfig.normalTitleFont)
-                let selectedButtonWidth = title.boundingWidth(with: innerConfig.selectedTitleFont)
+                let insetWidth = titleButton.titleEdgeInsets.left + titleButton.titleEdgeInsets.right
+                let normalButtonWidth = title.boundingWidth(with: innerConfig.normalTitleFont) + insetWidth
+                let selectedButtonWidth = title.boundingWidth(with: innerConfig.selectedTitleFont) + insetWidth
                 buttonWidth = selectedButtonWidth > normalButtonWidth ? selectedButtonWidth : normalButtonWidth
             }
-            titleButton.frame = CGRect(x: offsetX, y: 0, width: buttonWidth, height: scrollView.bounds.height)
+            titleButton.frame = CGRect(x: offsetX, y: 0, width: buttonWidth,
+                                       height: buttonSource?.segementSwitcherViewButtonHeight() ?? scrollView.bounds.height)
+            if buttonSource?.segementSwitcherViewMakeButtonsCenterY() ?? false {
+                titleButton.center = CGPoint(x: titleButton.center.x, y: bounds.height/2)
+            }
             switch innerConfig.type {
             case .tab:
                 offsetX += buttonWidth
