@@ -39,7 +39,7 @@ public class SegementSlideDefaultSwitcherView: UIView {
     
     public private(set) var selectedIndex: Int?
 
-    public weak var delegate: SegementSlideSwitcherViewDelegate?
+    public weak var buttonSource: SegementSlideSwitcherViewButtonSource?
     public weak var delegate: SegementSlideDefaultSwitcherViewDelegate?
 
     /// you must call `reloadData()` to make it work, after the assignment.
